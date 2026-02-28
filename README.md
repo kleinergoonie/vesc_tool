@@ -74,3 +74,42 @@ nix run nixpkgs#qtcreator
 ```
 
 This makes sure that QT Creator has access to the required dependencies.
+
+### Android
+
+Building VESC Tool for Android requires the following prerequisites:
+
+- **Qt 5.15.2** for Android (installed to `/opt/Qt5/5.15.2/android/`)
+- **Android SDK** (installed to `~/Android/Latest/Sdk`)
+- **Android NDK** version 23.1.7779620 (inside the SDK's `ndk/` subdirectory)
+- **Java JDK 8** (`java-1.8.0-openjdk-amd64`)
+
+Once the prerequisites are in place, run the provided build script:
+
+```shell
+./build_android
+```
+
+This produces two APK variants inside `build/android/`:
+
+- **vesc_tool_mobile.apk** – mobile-optimized UI (built with `CONFIG += build_mobile`)
+- **vesc_tool_full.apk** – full desktop-style UI
+
+Both APKs are also packaged together into `build/android/vesc_tool_android.zip`.
+
+To build only one variant manually, set the Qt Android `bin` directory on your `PATH` and run `qmake`, `make`, and `androiddeployqt` directly, for example:
+
+```shell
+export PATH=/opt/Qt5/5.15.2/android/bin/:$PATH
+export ANDROID_SDK_ROOT=~/Android/Latest/Sdk
+export ANDROID_NDK_ROOT=$ANDROID_SDK_ROOT/ndk/23.1.7779620
+
+# Mobile build
+qmake -config release "CONFIG += release_android build_mobile" ANDROID_ABIS="arm64-v8a" -spec android-clang
+make -j8
+make install INSTALL_ROOT=build/android/build
+androiddeployqt --gradle --no-gdbserver --output build/android/build \
+    --input android-vesc_tool-deployment-settings.json --android-platform android-33
+```
+
+The resulting APK can be sideloaded onto an Android device or published via your preferred distribution channel.
